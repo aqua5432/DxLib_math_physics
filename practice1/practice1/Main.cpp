@@ -51,6 +51,21 @@ enum class GameState
     Clear
 };
 
+void ResetGame(
+    GameState& gameState,
+    Vec2& playerPos,
+    Vec2& enemyPos,
+    int& startTime,
+    int& elapsedTime)
+{
+    gameState = GameState::Playing;
+
+    playerPos = Vec2(400.0f, 300.0f);
+    enemyPos = Vec2(200.0f, 200.0f);
+
+    startTime = GetNowCount();
+    elapsedTime = 0;
+}
 
 
 int WINAPI WinMain(
@@ -82,6 +97,7 @@ int WINAPI WinMain(
     const int TIME_LIMIT_MS = 10000; // 10•b
 
     int startTime = 0;
+    int elapsedTime = 0;
     startTime = GetNowCount();
 
     // --------------------
@@ -89,13 +105,23 @@ int WINAPI WinMain(
     // --------------------
     while (ProcessMessage() == 0)
     {
-        int currentTime = GetNowCount();
-        int elapsedTime = currentTime - startTime;
 
         // --------------------
         // •`‰æ
         // --------------------
         ClearDrawScreen();
+
+        if (gameState != GameState::Playing &&
+            CheckHitKey(KEY_INPUT_RETURN))
+        {
+            ResetGame(
+                gameState,
+                playerPos,
+                enemyPos,
+                startTime,
+                elapsedTime
+            );
+        }
 
         switch (gameState)
         {
@@ -113,6 +139,8 @@ int WINAPI WinMain(
                 gameState = GameState::GameOver;
             }
 
+            elapsedTime = GetNowCount() - startTime;
+
             // §ŒÀŽžŠÔƒNƒŠƒA”»’è
             if (elapsedTime >= TIME_LIMIT_MS)
             {
@@ -123,11 +151,13 @@ int WINAPI WinMain(
         case GameState::GameOver:
             // •\Ž¦‚Ì‚Ý
             DrawFormatString(300, 20, GetColor(255, 0, 0), "GAME OVER");
+            DrawFormatString(300, 40, GetColor(255, 255, 255), "PRESS ENTER TO RESTART");
             break;
 
         case GameState::Clear:
             // •\Ž¦‚Ì‚Ý
             DrawFormatString(300, 20, GetColor(0, 255, 0), "GAME CLEAR");
+            DrawFormatString(300, 40, GetColor(255, 255, 255), "PRESS ENTER TO RESTART");
             break;
         }
 
