@@ -1,8 +1,8 @@
-#include "DxLib.h"
+Ôªø#include "DxLib.h"
 #include <cmath>
 
 // --------------------
-// Vec2Åi2DÉxÉNÉgÉãÅj
+// Vec2Ôºà2D„Éô„ÇØ„Éà„É´Ôºâ
 // --------------------
 struct Vec2
 {
@@ -33,16 +33,21 @@ struct Vec2
     }
 };
 
-bool IsHitCircle(
-    const Vec2& aPos, float aRadius,
-    const Vec2& bPos, float bRadius)
+struct Circle
 {
-    Vec2 diff = aPos - bPos;
-    float distSq = diff.LengthSq();
-    float radiusSum = aRadius + bRadius;
+    Vec2 pos;
+    float radius;
+};
 
-    return distSq < radiusSum * radiusSum;
+bool IsHitCircle(const Circle& a, const Circle& b)
+{
+    Vec2 diff = a.pos - b.pos;
+    float distSq = diff.LengthSq();   // Ë∑ùÈõ¢¬≤
+    float radiusSum = a.radius + b.radius;
+
+    return distSq <= radiusSum * radiusSum;
 }
+
 
 enum class GameState
 {
@@ -81,33 +86,38 @@ int WINAPI WinMain(
         return -1;
     }
 
-    // --------------------
-    // â~ÇÃê›íË
-    // --------------------
-    Vec2 playerPos(400.0f, 300.0f);
-    const float playerRadius = 20.0f;
-    const float playerSpeed = 5.0f;
+    Circle player;
+    Circle enemy;
+    Circle goal;
 
-    Vec2 enemyPos(200.0f, 200.0f);
-    const float enemyRadius = 30.0f;
+    player.pos = Vec2(200.0f, 200.0f);
+    player.radius = 16.0f;
+
+    enemy.pos = Vec2(400.0f, 200.0f);
+    enemy.radius = 20.0f;
+
+    goal.pos = Vec2(600.0f, 400.0f);
+    goal.radius = 24.0f;
+
+    const float playerSpeed = 5.0f;
 
     GameState gameState = GameState::Playing;
 
-    // êßå¿éûä‘ÅiÉ~ÉäïbÅj
-    const int TIME_LIMIT_MS = 10000; // 10ïb
+    // Âà∂ÈôêÊôÇÈñìÔºà„Éü„É™ÁßíÔºâ
+    const int TIME_LIMIT_MS = 10000; // 10Áßí
 
     int startTime = 0;
     int elapsedTime = 0;
     startTime = GetNowCount();
 
     // --------------------
-    // ÉÅÉCÉìÉãÅ[Év
+    // „É°„Ç§„É≥„É´„Éº„Éó
     // --------------------
     while (ProcessMessage() == 0)
     {
 
         // --------------------
-        // ï`âÊ
+        // ÊèèÁîª
         // --------------------
         ClearDrawScreen();
 
@@ -116,8 +126,8 @@ int WINAPI WinMain(
         {
             ResetGame(
                 gameState,
-                playerPos,
-                enemyPos,
+                player.pos,
+                enemy.pos,
                 startTime,
                 elapsedTime
             );
@@ -126,60 +136,75 @@ int WINAPI WinMain(
         switch (gameState)
         {
         case GameState::Playing:
-            // çXêVÅEì¸óÕÅEîªíË
-            // ì¸óÕÅiPlayingíÜÇÃÇ›Åj
-            if (CheckHitKey(KEY_INPUT_W)) playerPos.y -= playerSpeed;
-            if (CheckHitKey(KEY_INPUT_S)) playerPos.y += playerSpeed;
-            if (CheckHitKey(KEY_INPUT_A)) playerPos.x -= playerSpeed;
-            if (CheckHitKey(KEY_INPUT_D)) playerPos.x += playerSpeed;
+            // Êõ¥Êñ∞„ÉªÂÖ•Âäõ„ÉªÂà§ÂÆö
+            // ÂÖ•ÂäõÔºàPlaying‰∏≠„ÅÆ„ÅøÔºâ
+            if (CheckHitKey(KEY_INPUT_W)) player.pos.y -= playerSpeed;
+            if (CheckHitKey(KEY_INPUT_S)) player.pos.y += playerSpeed;
+            if (CheckHitKey(KEY_INPUT_A)) player.pos.x -= playerSpeed;
+            if (CheckHitKey(KEY_INPUT_D)) player.pos.x += playerSpeed;
 
-            // è’ìÀîªíË
-            if (IsHitCircle(playerPos, playerRadius, enemyPos, enemyRadius))
+            // Ë°ùÁ™ÅÂà§ÂÆö
+            if (IsHitCircle(player, enemy))
             {
                 gameState = GameState::GameOver;
             }
 
-            elapsedTime = GetNowCount() - startTime;
-
-            // êßå¿éûä‘ÉNÉäÉAîªíË
-            if (elapsedTime >= TIME_LIMIT_MS)
+            // Ë°ùÁ™ÅÂà§ÂÆö
+            if (IsHitCircle(player, goal))
             {
                 gameState = GameState::Clear;
+            }
+
+            elapsedTime = GetNowCount() - startTime;
+
+            // Âà∂ÈôêÊôÇÈñì„ÇØ„É™„Ç¢Âà§ÂÆö
+            if (elapsedTime >= TIME_LIMIT_MS)
+            {
+                gameState = GameState::GameOver;
             }
             break;
 
         case GameState::GameOver:
-            // ï\é¶ÇÃÇ›
+            // Ë°®Á§∫„ÅÆ„Åø
             DrawFormatString(300, 20, GetColor(255, 0, 0), "GAME OVER");
             DrawFormatString(300, 40, GetColor(255, 255, 255), "PRESS ENTER TO RESTART");
             break;
 
         case GameState::Clear:
-            // ï\é¶ÇÃÇ›
+            // Ë°®Á§∫„ÅÆ„Åø
             DrawFormatString(300, 20, GetColor(0, 255, 0), "GAME CLEAR");
             DrawFormatString(300, 40, GetColor(255, 255, 255), "PRESS ENTER TO RESTART");
             break;
         }
 
-        // ìGÅiê‘Åj
+        // ÊïµÔºàËµ§Ôºâ
         DrawCircle(
-            static_cast<int>(enemyPos.x),
-            static_cast<int>(enemyPos.y),
-            static_cast<int>(enemyRadius),
+            static_cast<int>(enemy.pos.x),
+            static_cast<int>(enemy.pos.y),
+            static_cast<int>(enemy.radius),
             GetColor(255, 0, 0),
             TRUE
         );
 
-        // ÉvÉåÉCÉÑÅ[ÅiîíÅj
+        // „Éó„É¨„Ç§„É§„ÉºÔºàÁôΩÔºâ
         DrawCircle(
-            static_cast<int>(playerPos.x),
-            static_cast<int>(playerPos.y),
-            static_cast<int>(playerRadius),
+            static_cast<int>(player.pos.x),
+            static_cast<int>(player.pos.y),
+            static_cast<int>(player.radius),
             GetColor(255, 255, 255),
             TRUE
         );
 
-        // écÇËéûä‘ï\é¶
+        // „Ç¥„Éº„É´(Á∑ë)
+        DrawCircle(
+            (int)goal.pos.x,
+            (int)goal.pos.y,
+            (int)goal.radius,
+            GetColor(0, 255, 0),
+            TRUE
+        );
+
+        // ÊÆã„ÇäÊôÇÈñìË°®Á§∫
         int remainMs = TIME_LIMIT_MS - elapsedTime;
         if (remainMs < 0) remainMs = 0;
 
