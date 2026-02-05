@@ -33,6 +33,18 @@ struct Vec2
     }
 };
 
+bool IsHitCircle(
+    const Vec2& aPos, float aRadius,
+    const Vec2& bPos, float bRadius)
+{
+    Vec2 diff = aPos - bPos;
+    float distSq = diff.LengthSq();
+    float radiusSum = aRadius + bRadius;
+
+    return distSq < radiusSum * radiusSum;
+}
+
+
 int WINAPI WinMain(
     HINSTANCE hInstance,
     HINSTANCE hPrevInstance,
@@ -109,6 +121,16 @@ int WINAPI WinMain(
             GetColor(255, 255, 255),
             "Distance^2 : %.2f", distanceSq
         );
+
+        bool isHit = IsHitCircle(
+            playerPos, playerRadius,
+            enemyPos, enemyRadius
+        );
+
+        if (isHit)
+        {
+            DrawFormatString(300, 20, GetColor(255, 0, 0), "GAME OVER");
+        }
 
         ScreenFlip();
     }
