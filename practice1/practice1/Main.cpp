@@ -44,6 +44,14 @@ bool IsHitCircle(
     return distSq < radiusSum * radiusSum;
 }
 
+enum class GameState
+{
+    Playing,
+    GameOver,
+    Clear
+};
+
+
 
 int WINAPI WinMain(
     HINSTANCE hInstance,
@@ -68,28 +76,60 @@ int WINAPI WinMain(
     Vec2 enemyPos(200.0f, 200.0f);
     const float enemyRadius = 30.0f;
 
+    GameState gameState = GameState::Playing;
+
+    // 制限時間（ミリ秒）
+    const int TIME_LIMIT_MS = 10000; // 10秒
+
+    int startTime = 0;
+    startTime = GetNowCount();
+
     // --------------------
     // メインループ
     // --------------------
     while (ProcessMessage() == 0)
     {
-        // 入力（WASD）
-        if (CheckHitKey(KEY_INPUT_W)) playerPos.y -= playerSpeed;
-        if (CheckHitKey(KEY_INPUT_S)) playerPos.y += playerSpeed;
-        if (CheckHitKey(KEY_INPUT_A)) playerPos.x -= playerSpeed;
-        if (CheckHitKey(KEY_INPUT_D)) playerPos.x += playerSpeed;
-
-        // --------------------
-        // 距離計算
-        // --------------------
-        Vec2 diff = enemyPos - playerPos;
-        float distance = diff.Length();
-        float distanceSq = diff.LengthSq();
+        int currentTime = GetNowCount();
+        int elapsedTime = currentTime - startTime;
 
         // --------------------
         // 描画
         // --------------------
         ClearDrawScreen();
+
+        switch (gameState)
+        {
+        case GameState::Playing:
+            // 更新・入力・判定
+            // 入力（Playing中のみ）
+            if (CheckHitKey(KEY_INPUT_W)) playerPos.y -= playerSpeed;
+            if (CheckHitKey(KEY_INPUT_S)) playerPos.y += playerSpeed;
+            if (CheckHitKey(KEY_INPUT_A)) playerPos.x -= playerSpeed;
+            if (CheckHitKey(KEY_INPUT_D)) playerPos.x += playerSpeed;
+
+            // 衝突判定
+            if (IsHitCircle(playerPos, playerRadius, enemyPos, enemyRadius))
+            {
+                gameState = GameState::GameOver;
+            }
+
+            // 制限時間クリア判定
+            if (elapsedTime >= TIME_LIMIT_MS)
+            {
+                gameState = GameState::Clear;
+            }
+            break;
+
+        case GameState::GameOver:
+            // 表示のみ
+            DrawFormatString(300, 20, GetColor(255, 0, 0), "GAME OVER");
+            break;
+
+        case GameState::Clear:
+            // 表示のみ
+            DrawFormatString(300, 20, GetColor(0, 255, 0), "GAME CLEAR");
+            break;
+        }
 
         // 敵（赤）
         DrawCircle(
@@ -109,28 +149,16 @@ int WINAPI WinMain(
             TRUE
         );
 
-        // 距離表示
+        // 残り時間表示
+        int remainMs = TIME_LIMIT_MS - elapsedTime;
+        if (remainMs < 0) remainMs = 0;
+
         DrawFormatString(
             10, 10,
             GetColor(255, 255, 255),
-            "Distance     : %.2f", distance
+            "Time : %.2f",
+            remainMs / 1000.0f
         );
-
-        DrawFormatString(
-            10, 30,
-            GetColor(255, 255, 255),
-            "Distance^2 : %.2f", distanceSq
-        );
-
-        bool isHit = IsHitCircle(
-            playerPos, playerRadius,
-            enemyPos, enemyRadius
-        );
-
-        if (isHit)
-        {
-            DrawFormatString(300, 20, GetColor(255, 0, 0), "GAME OVER");
-        }
 
         ScreenFlip();
     }
