@@ -129,18 +129,17 @@ int WINAPI WinMain(
         if (gameState != GameState::Playing &&
             CheckHitKey(KEY_INPUT_RETURN))
         {
-            if (gameState == GameState::Title) {
-                ResetGame(
-                    gameState,
-                    player.pos,
-                    enemy.pos,
-                    startTime,
-                    elapsedTime
-                );
-            }
-            else {
-                gameState = GameState::Title;
-            }
+            gameState = GameState::Title;
+        }
+
+        if (gameState == GameState::Title && CheckHitKey(KEY_INPUT_SPACE)) {
+            ResetGame(
+                gameState,
+                player.pos,
+                enemy.pos,
+                startTime,
+                elapsedTime
+            );
         }
 
         switch (gameState)
@@ -152,7 +151,7 @@ int WINAPI WinMain(
             DrawFormatString(150, 200, GetColor(255, 255, 255), "2. 緑の円まで移動するタイムを競う");
             DrawFormatString(150, 250, GetColor(255, 255, 255), "3. 赤の円とぶつかるとゲームオーバー");
             DrawFormatString(150, 300, GetColor(255, 0, 0), "4. プレイヤーは2秒後に見えなくなります");
-            DrawFormatString(200, 400, GetColor(255, 255, 255), "PRESS ENTER TO START!");
+            DrawFormatString(200, 400, GetColor(255, 255, 255), "PRESS SPACE TO START!");
             break;
 
         case GameState::Playing:
