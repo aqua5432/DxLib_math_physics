@@ -1,5 +1,6 @@
 ﻿#include "DxLib.h"
 #include <cmath>
+#include <vector>
 
 // --------------------
 // Vec2（2Dベクトル）
@@ -66,12 +67,28 @@ void ResetGame(
 {
     gameState = GameState::Playing;
 
-    playerPos = Vec2(400.0f, 300.0f);
+    playerPos = Vec2(50.0f, 300.0f);
     enemyPos = Vec2(200.0f, 200.0f);
 
     startTime = GetNowCount();
     elapsedTime = 0;
 }
+
+std::vector<Circle> obstacles;
+
+const int SCREEN_WIDTH = 800;
+const int SCREEN_HEIGHT = 600;
+
+bool IsOutOfScreen(const Circle& c)
+{
+    if (c.pos.x - c.radius < 0) return true;
+    if (c.pos.x + c.radius > SCREEN_WIDTH) return true;
+    if (c.pos.y - c.radius < 0) return true;
+    if (c.pos.y + c.radius > SCREEN_HEIGHT) return true;
+
+    return false;
+}
+
 
 
 int WINAPI WinMain(
@@ -98,7 +115,7 @@ int WINAPI WinMain(
     enemy.radius = 20.0f;
 
     goal.pos = Vec2(600.0f, 400.0f);
-    goal.radius = 24.0f;
+    goal.radius = 40.0f;
 
     const float playerSpeed = 5.0f;
 
@@ -107,6 +124,16 @@ int WINAPI WinMain(
     int startTime = 0;
     int elapsedTime = 0;
     startTime = GetNowCount();
+
+    for (int i = 0; i < 6; i++)
+    {
+        float x = (i % 2 == 0) ? 350.0f : 450.0f;
+        obstacles.push_back({
+            Vec2(x, 150.0f + i * 70.0f),
+            18.0f
+            });
+    }
+
 
     // --------------------
     // メインループ
@@ -142,6 +169,14 @@ int WINAPI WinMain(
             );
         }
 
+        if (gameState == GameState::Playing)
+        {
+            if (IsOutOfScreen(player))
+            {
+                gameState = GameState::GameOver;
+            }
+        }
+
         switch (gameState)
         {
         case GameState::Title:
@@ -149,7 +184,7 @@ int WINAPI WinMain(
             DrawFormatString(270, 100, GetColor(255, 255, 255), "ルール");
             DrawFormatString(150, 150, GetColor(255, 255, 255), "1. WASDでプレイヤー(白い円)を操作");
             DrawFormatString(150, 200, GetColor(255, 255, 255), "2. 緑の円まで移動するタイムを競う");
-            DrawFormatString(150, 250, GetColor(255, 255, 255), "3. 赤の円とぶつかるとゲームオーバー");
+            DrawFormatString(150, 250, GetColor(255, 255, 255), "3. 赤の円とぶつかる、画面外にいってしまうとゲームオーバー");
             DrawFormatString(150, 300, GetColor(255, 0, 0), "4. プレイヤーは2秒後に見えなくなります");
             DrawFormatString(200, 400, GetColor(255, 255, 255), "PRESS SPACE TO START!");
             break;
@@ -163,6 +198,18 @@ int WINAPI WinMain(
             if (CheckHitKey(KEY_INPUT_D)) player.pos.x += playerSpeed;
 
             // 衝突判定
+            if (gameState == GameState::Playing)
+            {
+                for (const Circle& obs : obstacles)
+                {
+                    if (IsHitCircle(player, obs))
+                    {
+                        gameState = GameState::GameOver;
+                        break;
+                    }
+                }
+            }
+            
             if (IsHitCircle(player, enemy))
             {
                 gameState = GameState::GameOver;
@@ -195,13 +242,17 @@ int WINAPI WinMain(
 
         if (gameState != GameState::Title) {
             // 敵（赤）
-            DrawCircle(
-                static_cast<int>(enemy.pos.x),
-                static_cast<int>(enemy.pos.y),
-                static_cast<int>(enemy.radius),
-                GetColor(255, 0, 0),
-                TRUE
-            );
+            for (const Circle& obs : obstacles)
+            {
+                DrawCircle(
+                    (int)obs.pos.x,
+                    (int)obs.pos.y,
+                    (int)obs.radius,
+                    GetColor(255, 0, 0),
+                    TRUE
+                );
+            }
+
 
             if (isPlayerVisible) {
                 // プレイヤー（白）
