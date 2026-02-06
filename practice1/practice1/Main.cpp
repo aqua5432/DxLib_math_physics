@@ -103,9 +103,6 @@ int WINAPI WinMain(
 
     GameState gameState = GameState::Playing;
 
-    // 制限時間（ミリ秒）
-    const int TIME_LIMIT_MS = 10000; // 10秒
-
     int startTime = 0;
     int elapsedTime = 0;
     startTime = GetNowCount();
@@ -120,6 +117,13 @@ int WINAPI WinMain(
         // 描画
         // --------------------
         ClearDrawScreen();
+
+        bool isPlayerVisible = true;
+
+        if (elapsedTime > 2000.0f)
+        {
+            isPlayerVisible = false;
+        }
 
         if (gameState != GameState::Playing &&
             CheckHitKey(KEY_INPUT_RETURN))
@@ -157,23 +161,20 @@ int WINAPI WinMain(
 
             elapsedTime = GetNowCount() - startTime;
 
-            // 制限時間クリア判定
-            if (elapsedTime >= TIME_LIMIT_MS)
-            {
-                gameState = GameState::GameOver;
-            }
             break;
 
         case GameState::GameOver:
             // 表示のみ
             DrawFormatString(300, 20, GetColor(255, 0, 0), "GAME OVER");
             DrawFormatString(300, 40, GetColor(255, 255, 255), "PRESS ENTER TO RESTART");
+            isPlayerVisible = true;
             break;
 
         case GameState::Clear:
             // 表示のみ
             DrawFormatString(300, 20, GetColor(0, 255, 0), "GAME CLEAR");
             DrawFormatString(300, 40, GetColor(255, 255, 255), "PRESS ENTER TO RESTART");
+            isPlayerVisible = true;
             break;
         }
 
@@ -186,14 +187,16 @@ int WINAPI WinMain(
             TRUE
         );
 
-        // プレイヤー（白）
-        DrawCircle(
-            static_cast<int>(player.pos.x),
-            static_cast<int>(player.pos.y),
-            static_cast<int>(player.radius),
-            GetColor(255, 255, 255),
-            TRUE
-        );
+        if (isPlayerVisible) {
+            // プレイヤー（白）
+            DrawCircle(
+                static_cast<int>(player.pos.x),
+                static_cast<int>(player.pos.y),
+                static_cast<int>(player.radius),
+                GetColor(255, 255, 255),
+                TRUE
+            );
+        }
 
         // ゴール(緑)
         DrawCircle(
@@ -205,7 +208,7 @@ int WINAPI WinMain(
         );
 
         // 残り時間表示
-        int remainMs = TIME_LIMIT_MS - elapsedTime;
+        int remainMs = elapsedTime;
         if (remainMs < 0) remainMs = 0;
 
         DrawFormatString(
