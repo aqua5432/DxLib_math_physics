@@ -1,54 +1,7 @@
 ﻿#include "DxLib.h"
-#include <cmath>
+#include "Math.h"
+#include "Collision.h"
 #include <vector>
-
-// --------------------
-// Vec2（2Dベクトル）
-// --------------------
-struct Vec2
-{
-    float x;
-    float y;
-
-    Vec2() : x(0), y(0) {}
-    Vec2(float _x, float _y) : x(_x), y(_y) {}
-
-    Vec2 operator+(const Vec2& other) const
-    {
-        return Vec2(x + other.x, y + other.y);
-    }
-
-    Vec2 operator-(const Vec2& other) const
-    {
-        return Vec2(x - other.x, y - other.y);
-    }
-
-    float LengthSq() const
-    {
-        return x * x + y * y;
-    }
-
-    float Length() const
-    {
-        return sqrtf(LengthSq());
-    }
-};
-
-struct Circle
-{
-    Vec2 pos;
-    float radius;
-};
-
-bool IsHitCircle(const Circle& a, const Circle& b)
-{
-    Vec2 diff = a.pos - b.pos;
-    float distSq = diff.LengthSq();   // 距離²
-    float radiusSum = a.radius + b.radius;
-
-    return distSq <= radiusSum * radiusSum;
-}
-
 
 enum class GameState
 {
@@ -76,20 +29,8 @@ void ResetGame(
 
 std::vector<Circle> obstacles;
 
-const int SCREEN_WIDTH = 800;
-const int SCREEN_HEIGHT = 600;
-
-bool IsOutOfScreen(const Circle& c)
-{
-    if (c.pos.x - c.radius < 0) return true;
-    if (c.pos.x + c.radius > SCREEN_WIDTH) return true;
-    if (c.pos.y - c.radius < 0) return true;
-    if (c.pos.y + c.radius > SCREEN_HEIGHT) return true;
-
-    return false;
-}
-
-
+const int SCREEN_WIDTH = 640;
+const int SCREEN_HEIGHT = 480;
 
 int WINAPI WinMain(
     HINSTANCE hInstance,
@@ -171,7 +112,7 @@ int WINAPI WinMain(
 
         if (gameState == GameState::Playing)
         {
-            if (IsOutOfScreen(player))
+            if (IsOutOfScreen(player,SCREEN_WIDTH,SCREEN_HEIGHT))
             {
                 gameState = GameState::GameOver;
             }
